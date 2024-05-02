@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+readonly coverage="$(swift test --show-coverage-path)"
+if [[ ! -f "${coverage}" ]]; then
+  echo "no coverage found: ${coverage}" > /dev/stderr
+  exit 0
+fi
+
+readonly buildDir="${PWD}/build"
+if [[ ! -d "${buildDir}" ]]; then
+  mkdir -p "${buildDir}"
+fi
+
+cp "${coverage}" "${buildDir}/"

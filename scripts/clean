@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+readonly isDebug="${DEBUG:-""}"
+readonly isForce="${FORCE:-""}"
+readonly buildDir="build"
+
+declare includeDirectories=()
+
+includeDirectories+=("$( \
+grep -m 1 -A 1 'executable(' Package.swift | \
+grep 'name:' | \
+cut -d'"' -f2 | \
+tr -d '\n'
+)")
+
+declare swiftFile
+while read -r swiftFile; do
+  includeDirectories+=("${swiftFile}")
+done < <( \
+  find Sources \
+    -type f \
+    -name '*.swift' \
+    -exec bash -c 'sed "s/\.swift//g" <<< "${1##*/}"' _ {} \;)
+
+function canBeDeleted() {
+  if [[ -n "${isForce}" ]]; then
+    return 0
+  fi
+  local filepath="${1}"
+  local inclusion
+  for inclusion in "${includeDirectories[@]}"; do
+    if grep -q "${inclusion}" <<< "${filepath}"; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+declare builtArtifact
+while read -r builtArtifact; do
+  if canBeDeleted "${builtArtifact}"; then
+    if [[ -d "${builtArtifact}" ]]; then
+      rm -rf "${builtArtifact}"
+      [[ -z "${isDebug}" ]] || echo "[DEBUG] deleted: ${builtArtifact}"
+    elif [[ -f "${builtArtifact}" ]]; then
+      rm "${builtArtifact}"
+      [[ -z "${isDebug}" ]] || echo "[DEBUG] deleted: ${builtArtifact}"
+    else
+      echo "[ERROR] invalid file: ${builtArtifact}"
+    fi
+  fi
+done < <(find .build -maxdepth 3)
+
+rm -rf "${buildDir}"
+[[ -z "${isDebug}" ]] || echo "[DEBUG] deleted: ${buildDir}"

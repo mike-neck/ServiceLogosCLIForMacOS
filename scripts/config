@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+readonly self="${0}"
+readonly scriptsDir="${self%/*}"
+readonly sharedAppNameFile="${scriptsDir}/app-name.sh"
+# shellcheck source=scripts/app-name.sh
+source "${sharedAppNameFile}"
+readonly application="${appName:-""}"
+if [[ -n "${application}" ]]; then
+  echo "Application name not defined. Please checkout this project again." > /dev/stderr
+  exit 1
+fi
+
+readonly appConfigSwift="${PWD}/Sources/AppConfig.swift"
+
+readonly tagName="${TAG_NAME:-"$(git describe --tags --abbrev=0 2>/dev/null | tr -d '\n')"}"
+if [[ -z "${tagName}" ]]; then
+  echo "no TAG_NAME given or no git tags. Please check env parameter TAG_NAME or checkout the project again." > /dev/stderr
+  exit 3
+fi
+
+# //language=swift
+cat <<EOF > "${appConfigSwift}"
+import Foundation
+
+struct AppConfig {
+  public let name: String
+  public let version: String
+
+  public static let main: AppConfig = AppConfig(name: "${application}", version: "${tagName}")
+}
+EOF

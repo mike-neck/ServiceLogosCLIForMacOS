@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+readonly self="${0}"
+readonly scriptsDir="${self%/*}"
+readonly sharedAppNameFile="${scriptsDir}/app-name.sh"
+# shellcheck source=scripts/app-name.sh
+source "${sharedAppNameFile}"
+readonly application="${appName:-""}"
+if [[ -z "${application}" ]]; then
+  echo "Application name not defined. Please checkout this project again." > /dev/stderr
+  exit 1
+fi
+
+readonly artifactsDir="${PWD}/.build"
+if [[ ! -d "${artifactsDir}" ]]; then
+  echo "${artifactsDir} not found. Please call [make build] task before this task." > /dev/stderr
+  exit 1
+fi
+
+readonly buildDir="${PWD}/build"
+if [[ ! -d "${buildDir}" ]]; then
+  mkdir -p "${buildDir}"
+fi
+
+readonly targets=("release" "debug")
+
+declare item destinationDir
+for item in "${targets[@]}"; do
+  destinationDir="${buildDir}/${item}"
+  mkdir -p "${destinationDir}"
+  find -L "${artifactsDir}/${item}" \
+      -maxdepth 1 \
+      -name "${application}" \
+      -print \
+      -exec cp {} "${destinationDir}" \;
+done

@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+      - feature/*
+
+jobs:
+  build:
+    runs-on: macos-latest
+    timeout-minutes: 12
+
+    steps:
+      - uses: actions/checkout@v4
+        name: Checkout
+
+      - name: Setup Swift
+        uses: swift-actions/setup-swift@v2
+        with:
+          swift-version: "5.10"
+
+      - name: Cache Libraries
+        uses: actions/cache@v4
+        with:
+          path: |
+            .build
+          key: "Package::${{ hashFiles('Package.swift') }}"
+
+      - name: Test
+        run: make test
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-files
+          path: |
+            build/test-coverage.json
+            build/test-execution.log
+
