@@ -6,8 +6,8 @@ readonly sharedAppNameFile="${scriptsDir}/app-name.sh"
 # shellcheck source=scripts/app-name.sh
 source "${sharedAppNameFile}"
 readonly application="${appName:-""}"
-if [[ -n "${application}" ]]; then
-  echo "Application name not defined. Please checkout this project again." > /dev/stderr
+if [[ -z "${application}" ]]; then
+  echo "Application name not defined. Please checkout this project again.[self: ${self}, appNameFile: ${sharedAppNameFile}, appName: ${appName}]" > /dev/stderr
   exit 1
 fi
 
@@ -23,7 +23,7 @@ fi
 cat <<EOF > "${appConfigSwift}"
 import Foundation
 
-struct AppConfig {
+public struct AppConfig {
   public let name: String
   public let version: String
 

@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -x
+
+readonly self="${0}"
+readonly scriptsDir="${self%/*}"
+readonly configFile="${scriptsDir}/config"
+
+if [[ ! -x "${configFile}" ]]; then
+  echo "config script is not found: ${configFile}" > /dev/stderr
+  exit 1
+fi
+
+"${configFile}"
